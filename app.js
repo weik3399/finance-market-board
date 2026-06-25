@@ -3852,7 +3852,7 @@ function updateSharePanel() {
   if (els.shareDesc) {
     els.shareDesc.textContent = isLocalHost
       ? "家人和这台电脑连接同一个 Wi-Fi 后，在手机浏览器输入下面地址即可查看。"
-      : "把这个公网地址发给家人，手机用 5G 也可以打开；如果设置了密码，需要输入账号和密码。";
+      : "把这个公网地址发给家人，手机用 5G 也可以打开。";
   }
 }
 

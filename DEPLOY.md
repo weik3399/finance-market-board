@@ -4,11 +4,9 @@
 
 适合临时给家人看，不需要买服务器。
 
-1. 给本地服务加访问密码：
+1. 启动本地服务：
 
    ```powershell
-   $env:STOCK_BOARD_USER="family"
-   $env:STOCK_BOARD_PASSWORD="换成你自己的密码"
    python local_server.py
    ```
 
@@ -31,17 +29,10 @@
 2. 打开 Render，选择 `New` -> `Web Service`。
 3. 连接 GitHub 仓库。
 4. 部署方式选择 Docker。仓库里已经包含 `Dockerfile` 和 `render.yaml`。
-5. 在 Render 环境变量里设置：
-
-   ```text
-   STOCK_BOARD_USER=family
-   STOCK_BOARD_PASSWORD=换成你自己的密码
-   ```
-
-6. 部署完成后，Render 会给出一个 `https://...onrender.com` 公网地址。
+5. 部署完成后，Render 会给出一个 `https://...onrender.com` 公网地址。
 
 ## 安全建议
 
-- 公网部署时一定要设置 `STOCK_BOARD_PASSWORD`。
 - 不建议直接在家用路由器上做端口转发。
 - 这个页面用于学习和观察行情，不要在公网链接里放真实账户、持仓成本等敏感信息。
+- 如果以后要加入真实持仓、买入成本或收益金额，再加访问密码或登录。

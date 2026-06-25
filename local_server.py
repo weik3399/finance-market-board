@@ -1,6 +1,4 @@
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-import base64
-import hmac
 import json
 import os
 import socket
@@ -11,8 +9,6 @@ from urllib.request import Request, urlopen
 
 HOST = os.environ.get("STOCK_BOARD_HOST", "0.0.0.0")
 PORT = int(os.environ.get("STOCK_BOARD_PORT") or os.environ.get("PORT", "4173"))
-ACCESS_USER = os.environ.get("STOCK_BOARD_USER", "family")
-ACCESS_PASSWORD = os.environ.get("STOCK_BOARD_PASSWORD", "")
 ALLOWED_RANGES = {"1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"}
 ALLOWED_INTERVALS = {"1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo", "3mo"}
 
@@ -67,9 +63,6 @@ class StockBoardHandler(SimpleHTTPRequestHandler):
         if parsed.path == "/healthz":
             self.send_plain_text(200, "ok")
             return
-        if not self.is_authorized():
-            self.send_auth_required()
-            return
         if parsed.path == "/api/yahoo-chart":
             self.handle_yahoo_chart(parsed)
             return
@@ -77,31 +70,6 @@ class StockBoardHandler(SimpleHTTPRequestHandler):
             self.handle_share_info()
             return
         super().do_GET()
-
-    def is_authorized(self):
-        if not ACCESS_PASSWORD:
-            return True
-
-        header = self.headers.get("Authorization", "")
-        if not header.startswith("Basic "):
-            return False
-
-        try:
-            decoded = base64.b64decode(header.removeprefix("Basic ").strip()).decode("utf-8")
-        except (ValueError, UnicodeDecodeError):
-            return False
-
-        user, sep, password = decoded.partition(":")
-        return bool(sep) and hmac.compare_digest(user, ACCESS_USER) and hmac.compare_digest(password, ACCESS_PASSWORD)
-
-    def send_auth_required(self):
-        body = b"Authentication required"
-        self.send_response(401)
-        self.send_header("WWW-Authenticate", 'Basic realm="Stock Board"')
-        self.send_header("Content-Type", "text/plain; charset=utf-8")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
 
     def send_plain_text(self, status, message):
         body = message.encode("utf-8")
