@@ -286,7 +286,7 @@ body.dark .topbar {
 
 .app-module-tabs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-top: 14px;
   padding: 8px;
@@ -427,6 +427,7 @@ body.dark .app-module-tabs {
 .calculator-surface,
 .glossary-surface,
 .ai-surface,
+.custom-surface,
 .chart-surface,
 .watchlist-surface {
   border: 1px solid var(--line);
@@ -1555,6 +1556,117 @@ body.dark .app-module-tabs {
   min-width: 980px;
 }
 
+.custom-surface {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background:
+    linear-gradient(180deg, rgba(34, 111, 84, 0.08), transparent 180px),
+    var(--panel-soft);
+}
+
+.custom-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.custom-header h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  letter-spacing: 0;
+}
+
+.custom-add-form {
+  display: grid;
+  grid-template-columns: 86px 124px minmax(190px, 1fr) auto;
+  gap: 8px;
+  min-width: min(640px, 100%);
+}
+
+.custom-add-form input,
+.custom-add-form select {
+  min-height: 40px;
+  min-width: 0;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.custom-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.custom-hint.error {
+  color: var(--red);
+}
+
+.custom-metrics {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.custom-metric-tile {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.custom-metric-tile span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 850;
+}
+
+.custom-metric-tile strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 4px;
+  font-size: 0.98rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-table-wrap {
+  overflow: visible;
+  background: var(--panel);
+}
+
+.custom-table {
+  min-width: 1080px;
+}
+
+.custom-row:hover {
+  background: rgba(34, 111, 84, 0.06);
+}
+
+.custom-type-cell {
+  display: grid;
+  gap: 3px;
+}
+
+.custom-type-cell strong {
+  font-weight: 900;
+}
+
+.custom-type-cell span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
 .cycle-value {
   align-items: flex-start;
   flex-direction: column;
@@ -2515,7 +2627,7 @@ tr:last-child td {
   }
 
   .app-module-tabs {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .market-clock,
@@ -2565,12 +2677,24 @@ tr:last-child td {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .fund-header {
+  .fund-header,
+  .custom-header {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .fund-metrics {
+  .custom-add-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+  }
+
+  .custom-add-form input {
+    grid-column: 1 / -1;
+  }
+
+  .fund-metrics,
+  .custom-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -2646,7 +2770,8 @@ tr:last-child td {
     min-width: 780px;
   }
 
-  .overview-table-wrap {
+  .overview-table-wrap,
+  .custom-table-wrap {
     overflow-x: auto;
   }
 }
@@ -2689,40 +2814,47 @@ tr:last-child td {
   }
 
   .overview-metrics,
-  .fund-metrics {
+  .fund-metrics,
+  .custom-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .overview-table-wrap,
-  .fund-table-wrap {
+  .fund-table-wrap,
+  .custom-table-wrap {
     overflow: visible;
     border: 0;
     background: transparent;
   }
 
   .overview-table,
-  .fund-table {
+  .fund-table,
+  .custom-table {
     display: block;
     min-width: 0;
   }
 
-  .fund-table-wrap table {
+  .fund-table-wrap table,
+  .custom-table-wrap table {
     min-width: 0;
   }
 
   .overview-table thead,
-  .fund-table thead {
+  .fund-table thead,
+  .custom-table thead {
     display: none;
   }
 
   .overview-table tbody,
-  .fund-table tbody {
+  .fund-table tbody,
+  .custom-table tbody {
     display: grid;
     gap: 8px;
   }
 
   .overview-table tr,
-  .fund-table tr {
+  .fund-table tr,
+  .custom-table tr {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px 12px;
@@ -2733,7 +2865,8 @@ tr:last-child td {
   }
 
   .overview-table td,
-  .fund-table td {
+  .fund-table td,
+  .custom-table td {
     height: auto;
     padding: 0;
     border: 0;
@@ -2741,7 +2874,8 @@ tr:last-child td {
   }
 
   .overview-table .col-board,
-  .fund-table .col-fund-category {
+  .fund-table .col-fund-category,
+  .custom-table .col-custom-type {
     grid-column: 1 / -1;
     order: 0;
   }
@@ -2759,26 +2893,30 @@ tr:last-child td {
   }
 
   .overview-table .col-name,
-  .fund-table .col-fund-name {
+  .fund-table .col-fund-name,
+  .custom-table .col-custom-name {
     grid-column: 1 / 2;
     order: 1;
     min-width: 0;
   }
 
   .overview-table .stock-cell strong,
-  .fund-table .stock-cell strong {
+  .fund-table .stock-cell strong,
+  .custom-table .stock-cell strong {
     white-space: normal;
   }
 
   .overview-table .stock-cell span,
-  .fund-table .stock-cell span {
+  .fund-table .stock-cell span,
+  .custom-table .stock-cell span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .overview-table .col-quote,
-  .fund-table .col-fund-quote {
+  .fund-table .col-fund-quote,
+  .custom-table .col-custom-quote {
     grid-column: 2 / 3;
     order: 1;
     min-width: 94px;
@@ -2795,7 +2933,10 @@ tr:last-child td {
   .overview-table .col-p250,
   .fund-table .col-fund-p30,
   .fund-table .col-fund-p90,
-  .fund-table .col-fund-p250 {
+  .fund-table .col-fund-p250,
+  .custom-table .col-custom-p30,
+  .custom-table .col-custom-p90,
+  .custom-table .col-custom-p250 {
     display: inline-flex;
     align-items: baseline;
     gap: 6px;
@@ -2805,20 +2946,23 @@ tr:last-child td {
   }
 
   .overview-table .col-p30,
-  .fund-table .col-fund-p30 {
+  .fund-table .col-fund-p30,
+  .custom-table .col-custom-p30 {
     grid-column: 1 / 2;
     order: 2;
   }
 
   .overview-table .col-p90,
-  .fund-table .col-fund-p90 {
+  .fund-table .col-fund-p90,
+  .custom-table .col-custom-p90 {
     grid-column: 2 / 3;
     order: 2;
     justify-self: end;
   }
 
   .overview-table .col-p250,
-  .fund-table .col-fund-p250 {
+  .fund-table .col-fund-p250,
+  .custom-table .col-custom-p250 {
     grid-column: 1 / 2;
     order: 3;
   }
@@ -2865,9 +3009,37 @@ tr:last-child td {
     font-weight: 850;
   }
 
-  .overview-table .col-trend {
+  .custom-table .col-custom-p30::before {
+    content: "30日";
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 850;
+  }
+
+  .custom-table .col-custom-p90::before {
+    content: "3个月";
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 850;
+  }
+
+  .custom-table .col-custom-p250::before {
+    content: "1年";
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 850;
+  }
+
+  .overview-table .col-trend,
+  .custom-table .col-custom-trend {
     grid-column: 2 / 3;
     order: 3;
+    justify-self: end;
+  }
+
+  .custom-table .col-custom-action {
+    grid-column: 2 / 3;
+    order: 4;
     justify-self: end;
   }
 
@@ -2901,8 +3073,13 @@ tr:last-child td {
     flex-direction: column;
   }
 
-  .add-code-form {
+  .add-code-form,
+  .custom-add-form {
     grid-template-columns: 1fr;
+  }
+
+  .custom-add-form input {
+    grid-column: auto;
   }
 
   .calc-grid {

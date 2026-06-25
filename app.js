@@ -594,7 +594,21 @@ const STORAGE_KEYS = {
   aiCycleWindow: "stock-board-ai-cycle-window",
   aiTrendRange: "stock-board-ai-trend-range",
   activeAppModule: "stock-board-active-module",
+  customWatchlist: "stock-board-custom-watchlist",
   theme: "stock-board-theme",
+};
+
+const CUSTOM_MARKET_OPTIONS = {
+  stock: [
+    { value: "cn", label: "A股" },
+    { value: "hk", label: "港股" },
+    { value: "us", label: "美股" },
+    { value: "global", label: "全球核心" },
+  ],
+  fund: [
+    { value: "us", label: "美股ETF" },
+    { value: "cn", label: "境内场内基金" },
+  ],
 };
 
 const state = {
@@ -614,6 +628,7 @@ const state = {
   fundKlineErrors: {},
   fundKlineRetryAt: {},
   watchlists: {},
+  customWatchlist: normalizeCustomWatchlist(readJSON(STORAGE_KEYS.customWatchlist, [])),
   aiMonitors: {},
   aiHistory: {},
   aiKlines: {},
@@ -638,6 +653,7 @@ const state = {
   refreshing: false,
   pendingStockRefresh: false,
   pendingFundRefresh: false,
+  pendingCustomRefresh: false,
   shareUrl: `${window.location.origin}/`,
 };
 
@@ -655,6 +671,8 @@ document.addEventListener("DOMContentLoaded", () => {
   renderGlossary();
   renderAiFilters();
   renderFundDashboard();
+  updateCustomMarketOptions();
+  renderCustomDashboard();
   syncMonitorControls();
   setActiveAppModule(state.activeAppModule);
   bindEvents();
@@ -717,6 +735,14 @@ function bindElements() {
   els.fundMetrics = document.getElementById("fundMetrics");
   els.fundCards = document.getElementById("fundCards");
   els.fundRows = document.getElementById("fundRows");
+  els.customSurface = document.getElementById("customSurface");
+  els.customAddForm = document.getElementById("customAddForm");
+  els.customTypeInput = document.getElementById("customTypeInput");
+  els.customMarketInput = document.getElementById("customMarketInput");
+  els.customCodeInput = document.getElementById("customCodeInput");
+  els.customHint = document.getElementById("customHint");
+  els.customMetrics = document.getElementById("customMetrics");
+  els.customRows = document.getElementById("customRows");
   els.marketCanvas = document.getElementById("marketCanvas");
   els.statPrice = document.getElementById("statPrice");
   els.statPct = document.getElementById("statPct");
@@ -743,6 +769,9 @@ function bindEvents() {
   els.themeToggle.addEventListener("click", toggleTheme);
   els.marketTabs.addEventListener("click", handleMarketClick);
   els.fundTabs?.addEventListener("click", handleFundScopeClick);
+  els.customTypeInput?.addEventListener("change", updateCustomMarketOptions);
+  els.customAddForm?.addEventListener("submit", handleCustomAdd);
+  els.customRows?.addEventListener("click", handleCustomAction);
   els.aiCategoryFilters.addEventListener("click", handleAiFilterClick);
   els.aiLevelFilters.addEventListener("click", handleAiFilterClick);
   els.aiSearchInput.addEventListener("input", handleAiSearch);
@@ -877,7 +906,7 @@ function handleAppModuleClick(event) {
 }
 
 function setActiveAppModule(module) {
-  const active = ["ai", "fund"].includes(module) ? module : "ai";
+  const active = ["ai", "fund", "custom"].includes(module) ? module : "ai";
   state.activeAppModule = active;
   localStorage.setItem(STORAGE_KEYS.activeAppModule, active);
 
@@ -889,7 +918,7 @@ function setActiveAppModule(module) {
 
   document.querySelectorAll("[data-app-panel]").forEach((panel) => {
     const panelName = panel.dataset.appPanel;
-    const visible = panelName === active || (panelName === "market-shell" && (active === "ai" || active === "fund"));
+    const visible = panelName === active || (panelName === "market-shell" && ["ai", "fund", "custom"].includes(active));
     panel.hidden = !visible;
   });
 
@@ -898,12 +927,20 @@ function setActiveAppModule(module) {
   });
 
   if (els.marketTitle) {
-    els.marketTitle.textContent = active === "fund" ? "AI上游对应基金收益率" : "AI上游股票分析";
+    const titleMap = {
+      ai: "AI上游股票分析",
+      fund: "AI上游对应基金收益率",
+      custom: "自选股票和基金观察",
+    };
+    els.marketTitle.textContent = titleMap[active] || titleMap.ai;
   }
 
   if (active === "fund") {
     renderFundDashboard();
     refreshFundQuotes();
+  } else if (active === "custom") {
+    renderCustomDashboard();
+    refreshCustomQuotes();
   } else {
     renderIndexCards();
     renderAiDashboard();
@@ -1132,6 +1169,7 @@ function ensureOverviewKlineData(entry, quote) {
     .finally(() => {
       state.overviewKlineLoading[code] = false;
       if (state.activeMarket === "overview") renderOverviewDashboard();
+      if (state.activeAppModule === "custom") renderCustomDashboard();
     });
 }
 
@@ -1581,6 +1619,7 @@ function ensureFundKlineData(fund, quote) {
     .finally(() => {
       state.fundKlineLoading[key] = false;
       if (state.activeAppModule === "fund") renderFundDashboard();
+      if (state.activeAppModule === "custom") renderCustomDashboard();
     });
 }
 
@@ -1598,6 +1637,279 @@ function loadFundKlineCandles(fund, quote, count = 250) {
   }
 
   return loadKlineCandlesForCount(getFundQuoteCode(fund), quote, size);
+}
+
+function updateCustomMarketOptions() {
+  if (!els.customTypeInput || !els.customMarketInput) return;
+  const type = els.customTypeInput.value === "fund" ? "fund" : "stock";
+  const options = CUSTOM_MARKET_OPTIONS[type] ?? CUSTOM_MARKET_OPTIONS.stock;
+  const previous = els.customMarketInput.value;
+  els.customMarketInput.innerHTML = options
+    .map((option) => `<option value="${option.value}">${option.label}</option>`)
+    .join("");
+  els.customMarketInput.value = options.some((option) => option.value === previous) ? previous : options[0].value;
+}
+
+function renderCustomDashboard() {
+  if (!els.customRows || !els.customMetrics) return;
+
+  const rows = normalizeCustomWatchlist(state.customWatchlist).map((item) => {
+    if (item.type === "fund") {
+      const fund = getCustomFundRecord(item);
+      const quote = getFundQuote(fund);
+      ensureFundKlineData(fund, quote);
+      const key = getFundQuoteCode(fund);
+      return {
+        item,
+        quote,
+        name: quote?.name ?? fund.name,
+        codeLabel: quote?.displayCode ?? getCustomFundDisplayCode(fund),
+        typeLabel: "基金",
+        marketLabel: fundMarketLabel(fund.market),
+        note: fund.category,
+        p30: getFundPeriodPct(fund, 30),
+        p90: getFundPeriodPct(fund, 90),
+        p250: getFundPeriodPct(fund, 250),
+        candles: state.fundKlines[key]?.candles ?? [],
+      };
+    }
+
+    const quote = state.quotes.get(item.code);
+    ensureCustomStockKlineData(item, quote);
+    return {
+      item,
+      quote,
+      name: quote?.name ?? getCustomStockFallbackName(item),
+      codeLabel: quote?.displayCode ?? getCustomStockFallbackCode(item),
+      typeLabel: "股票",
+      marketLabel: customMarketLabel(item.market),
+      note: customMarketLabel(item.market),
+      p30: getOverviewPeriodPct(item.code, 30),
+      p90: getOverviewPeriodPct(item.code, 90),
+      p250: getOverviewPeriodPct(item.code, 250),
+      candles: getOverviewCandles(item.code),
+    };
+  });
+
+  const quoted = rows.map((row) => row.quote).filter(Boolean);
+  const upCount = quoted.filter((quote) => quote.changePct > 0).length;
+  const avgToday = average(quoted.map((quote) => quote.changePct).filter(Number.isFinite));
+  const avg30 = average(rows.map((row) => row.p30).filter(Number.isFinite));
+  const bestToday = rows
+    .filter((row) => Number.isFinite(row.quote?.changePct))
+    .sort((a, b) => b.quote.changePct - a.quote.changePct)[0];
+
+  els.customMetrics.innerHTML = [
+    ["自选总数", `${rows.length} 个`],
+    ["股票", `${rows.filter((row) => row.item.type === "stock").length} 只`],
+    ["基金", `${rows.filter((row) => row.item.type === "fund").length} 只`],
+    ["今日上涨", quoted.length ? `${upCount}/${quoted.length}` : "--"],
+    ["今日平均", Number.isFinite(avgToday) ? formatPct(avgToday) : "--"],
+    ["30日平均", Number.isFinite(avg30) ? formatDeltaPct(avg30) : "读取中"],
+    ["今日最强", bestToday ? `${bestToday.name} ${formatPct(bestToday.quote.changePct)}` : "--"],
+  ]
+    .map(([label, value]) => `<div class="custom-metric-tile"><span>${label}</span><strong>${value}</strong></div>`)
+    .join("");
+
+  els.customRows.innerHTML =
+    rows
+      .map((row) => {
+        const dayTone = toneClass(row.quote?.changePct);
+        const id = customItemKey(row.item);
+        return `
+          <tr class="custom-row">
+            <td class="col-custom-type">
+              <div class="custom-type-cell">
+                <strong>${row.typeLabel}</strong>
+                <span>${row.marketLabel}</span>
+              </div>
+            </td>
+            <td class="col-custom-name">
+              <div class="stock-cell">
+                <strong>${row.name}</strong>
+                <span>${row.codeLabel} · ${row.note}</span>
+              </div>
+            </td>
+            <td class="col-custom-quote">
+              <div class="overview-price-cell">
+                <strong>${formatPrice(row.quote?.price)} ${row.quote?.currency ?? ""}</strong>
+                <span class="${dayTone}">${formatPct(row.quote?.changePct)}</span>
+                <em>${formatQuoteDateTime(row.quote?.time)}</em>
+              </div>
+            </td>
+            <td class="col-custom-p30 ${toneClass(row.p30)}">${formatDeltaPct(row.p30)}</td>
+            <td class="col-custom-p90 ${toneClass(row.p90)}">${formatDeltaPct(row.p90)}</td>
+            <td class="col-custom-p250 ${toneClass(row.p250)}">${formatDeltaPct(row.p250)}</td>
+            <td class="col-custom-trend overview-trend-cell">
+              <button class="trend-hover-button" type="button">走势</button>
+              <div class="overview-trend-popover">
+                <strong>${row.name} · 近一年</strong>
+                ${renderOverviewTrendSvg(row.candles)}
+              </div>
+            </td>
+            <td class="col-custom-action">
+              <button class="remove-button" type="button" data-custom-remove="${id}" title="移除" aria-label="移除${row.name}">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      })
+      .join("") || `<tr><td colspan="8">还没有自选。可以添加 A股、港股、美股、全球核心股票，或美股ETF/境内场内基金。</td></tr>`;
+}
+
+function handleCustomAdd(event) {
+  event.preventDefault();
+  const type = els.customTypeInput?.value === "fund" ? "fund" : "stock";
+  const market = els.customMarketInput?.value || (type === "fund" ? "us" : "cn");
+  const code = type === "fund"
+    ? normalizeFundCode(els.customCodeInput.value, market)
+    : normalizeCode(els.customCodeInput.value, market);
+
+  if (!code) {
+    setCustomHint("代码格式不对。股票示例：600519、00700、AAPL；基金示例：SMH、QQQ、512480。", true);
+    return;
+  }
+
+  const item = {
+    type,
+    market: type === "stock" ? marketFromCode(code) : market,
+    code,
+  };
+  const key = customItemKey(item);
+  const list = normalizeCustomWatchlist(state.customWatchlist).filter((saved) => customItemKey(saved) !== key);
+  state.customWatchlist = [item, ...list].slice(0, 40);
+  saveCustomWatchlist();
+
+  els.customCodeInput.value = "";
+  setCustomHint("已加入自选，正在刷新行情。", false);
+  renderCustomDashboard();
+  refreshCustomQuotes();
+}
+
+function handleCustomAction(event) {
+  const button = event.target.closest("[data-custom-remove]");
+  if (!button) return;
+
+  const key = button.dataset.customRemove;
+  state.customWatchlist = normalizeCustomWatchlist(state.customWatchlist).filter((item) => customItemKey(item) !== key);
+  saveCustomWatchlist();
+  setCustomHint("已从自选移除。", false);
+  renderCustomDashboard();
+  refreshIcons();
+}
+
+function getCustomStockItems() {
+  return normalizeCustomWatchlist(state.customWatchlist).filter((item) => item.type === "stock");
+}
+
+function getCustomFundItems() {
+  return normalizeCustomWatchlist(state.customWatchlist).filter((item) => item.type === "fund");
+}
+
+function getCustomFundRecord(item) {
+  const found = FUND_UNIVERSE.find((fund) => fund.market === item.market && fund.code.toUpperCase() === item.code.toUpperCase());
+  if (found) return found;
+
+  return {
+    code: item.code,
+    name: item.market === "us" ? `${item.code} ETF` : `${item.code} 基金`,
+    market: item.market,
+    category: item.market === "us" ? "美股ETF" : "自选基金",
+    focus: "自选添加，周期涨跌幅按可获取日K线计算。",
+    useCase: "自选观察",
+    r1y: null,
+    r3y: null,
+    r5y: null,
+    total: null,
+    drawdown: null,
+    sample: "自选",
+  };
+}
+
+function getCustomFundDisplayCode(fund) {
+  return fund.market === "us" ? fund.code.toUpperCase() : fund.code;
+}
+
+function getCustomStockFallbackName(item) {
+  return GLOBAL_QUOTE_SYMBOLS[item.code]?.name ?? item.code;
+}
+
+function getCustomStockFallbackCode(item) {
+  return GLOBAL_QUOTE_SYMBOLS[item.code]?.displayCode ?? item.code.replace(/^(sh|sz|hk|us)/i, "");
+}
+
+function customMarketLabel(market) {
+  return {
+    cn: "A股",
+    hk: "港股",
+    us: "美股",
+    global: "全球核心",
+  }[market] ?? market;
+}
+
+function normalizeFundCode(value, market) {
+  const compact = value.trim().replace(/\s+/g, "");
+  if (!compact) return "";
+
+  if (market === "us") {
+    const symbol = compact.replace(/^us/i, "").toUpperCase();
+    return /^[A-Z.]{1,12}$/.test(symbol) ? symbol : "";
+  }
+
+  if (market === "cn") {
+    const code = compact.replace(/^(sh|sz)/i, "");
+    return /^\d{6}$/.test(code) ? code : "";
+  }
+
+  return "";
+}
+
+function normalizeCustomWatchlist(items) {
+  if (!Array.isArray(items)) return [];
+  const seen = new Set();
+  return items
+    .map((item) => {
+      const type = item?.type === "fund" ? "fund" : "stock";
+      const market = String(item?.market || "").trim();
+      const code = String(item?.code || "").trim();
+      if (!market || !code) return null;
+      return { type, market, code };
+    })
+    .filter(Boolean)
+    .filter((item) => {
+      const key = customItemKey(item);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+function customItemKey(item) {
+  return `${item.type}:${item.market}:${item.code}`;
+}
+
+function saveCustomWatchlist() {
+  state.customWatchlist = normalizeCustomWatchlist(state.customWatchlist);
+  writeJSON(STORAGE_KEYS.customWatchlist, state.customWatchlist);
+}
+
+function setCustomHint(message, isError) {
+  if (!els.customHint) return;
+  els.customHint.textContent = message;
+  els.customHint.classList.toggle("error", Boolean(isError));
+}
+
+function ensureCustomStockKlineData(item, quote) {
+  ensureOverviewKlineData(
+    {
+      code: item.code,
+      market: item.market,
+      segment: "all",
+      level: "support",
+    },
+    quote,
+  );
 }
 
 function renderAiRows(entries) {
@@ -2631,6 +2943,10 @@ function refreshActiveData() {
     refreshFundQuotes();
     return;
   }
+  if (state.activeAppModule === "custom") {
+    refreshCustomQuotes();
+    return;
+  }
   refreshQuotes();
 }
 
@@ -2713,6 +3029,45 @@ async function refreshFundQuotes() {
   }
 }
 
+async function refreshCustomQuotes() {
+  if (state.refreshing) {
+    state.pendingCustomRefresh = true;
+    return;
+  }
+  state.pendingCustomRefresh = false;
+  state.refreshing = true;
+  setLoading(true);
+
+  const stockCodes = getCustomStockItems().map((item) => item.code);
+  const fundRecords = getCustomFundItems().map(getCustomFundRecord);
+  const fundCodes = fundRecords.map(getFundQuoteCode);
+  const stockSet = new Set(stockCodes);
+  const fundSet = new Set(fundCodes);
+
+  try {
+    const quotes = await loadQuotes(unique([...stockCodes, ...fundCodes]));
+    const nextQuotes = new Map(state.quotes);
+    const nextFundQuotes = new Map(state.fundQuotes);
+    quotes.filter(Boolean).forEach((quote) => {
+      if (stockSet.has(quote.code)) nextQuotes.set(quote.code, quote);
+      if (fundSet.has(quote.code)) nextFundQuotes.set(quote.code, quote);
+    });
+    state.quotes = nextQuotes;
+    state.fundQuotes = nextFundQuotes;
+    renderCustomDashboard();
+    els.lastUpdate.textContent = `更新 ${new Date().toLocaleTimeString("zh-CN", { hour12: false })}`;
+  } catch (error) {
+    console.error(error);
+    els.lastUpdate.textContent = "自选行情读取失败";
+    renderCustomDashboard();
+  } finally {
+    state.refreshing = false;
+    setLoading(false);
+    refreshIcons();
+    runPendingRefresh();
+  }
+}
+
 function runPendingRefresh() {
   if (state.refreshing) return;
 
@@ -2725,6 +3080,12 @@ function runPendingRefresh() {
   if (state.activeAppModule === "fund" && state.pendingFundRefresh) {
     state.pendingFundRefresh = false;
     refreshFundQuotes();
+    return;
+  }
+
+  if (state.activeAppModule === "custom" && state.pendingCustomRefresh) {
+    state.pendingCustomRefresh = false;
+    refreshCustomQuotes();
   }
 }
 
@@ -2732,6 +3093,8 @@ function setLoading(isLoading) {
   els.refreshBtn.disabled = isLoading;
   els.indexCards.classList.toggle("loading", isLoading);
   els.overviewSurface?.classList.toggle("loading", isLoading);
+  els.customSurface?.classList.toggle("loading", isLoading);
+  els.customMetrics?.classList.toggle("loading", isLoading);
   els.aiMetrics.classList.toggle("loading", isLoading);
   els.monitorFocusCards.classList.toggle("loading", isLoading);
   els.stockTrendPanel.classList.toggle("loading", isLoading);
