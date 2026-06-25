@@ -797,11 +797,33 @@ function bindEvents() {
 
   window.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !els.sharePanel?.hidden) closeSharePanel();
+    if (event.key === "Escape") closeTrendPreviews();
   });
 
   document.addEventListener("click", (event) => {
     const trendButton = event.target.closest(".trend-hover-button");
-    if (trendButton) trendButton.blur();
+    const openTrendCell = event.target.closest(".overview-trend-cell.is-open");
+
+    if (trendButton) {
+      const trendCell = trendButton.closest(".overview-trend-cell");
+      const shouldOpen = !trendCell?.classList.contains("is-open");
+      closeTrendPreviews();
+      if (shouldOpen && trendCell) {
+        trendCell.classList.add("is-open");
+        trendButton.setAttribute("aria-expanded", "true");
+      }
+      trendButton.blur();
+      return;
+    }
+
+    if (!openTrendCell) closeTrendPreviews();
+  });
+}
+
+function closeTrendPreviews() {
+  document.querySelectorAll(".overview-trend-cell.is-open").forEach((cell) => {
+    cell.classList.remove("is-open");
+    cell.querySelector(".trend-hover-button")?.setAttribute("aria-expanded", "false");
   });
 }
 
@@ -1100,7 +1122,7 @@ function renderOverviewDashboard() {
             <td class="col-p90 ${toneClass(p90)}">${formatDeltaPct(p90)}</td>
             <td class="col-p250 ${toneClass(p250)}">${formatDeltaPct(p250)}</td>
             <td class="col-trend overview-trend-cell">
-              <button class="trend-hover-button" type="button">走势</button>
+              <button class="trend-hover-button" type="button" aria-haspopup="dialog" aria-expanded="false">走势</button>
               <div class="overview-trend-popover">
                 <strong>${quote?.name ?? getOverviewFallbackName(entry)} · 近一年</strong>
                 ${renderOverviewTrendSvg(candles)}
@@ -1770,7 +1792,7 @@ function renderCustomDashboard() {
             <td class="col-custom-p90 ${toneClass(row.p90)}">${formatDeltaPct(row.p90)}</td>
             <td class="col-custom-p250 ${toneClass(row.p250)}">${formatDeltaPct(row.p250)}</td>
             <td class="col-custom-trend overview-trend-cell">
-              <button class="trend-hover-button" type="button">走势</button>
+              <button class="trend-hover-button" type="button" aria-haspopup="dialog" aria-expanded="false">走势</button>
               <div class="overview-trend-popover">
                 <strong>${row.name} · 近一年</strong>
                 ${renderOverviewTrendSvg(row.candles)}

@@ -871,6 +871,11 @@ body.dark .trend-hover-button {
   background: linear-gradient(180deg, rgba(34, 40, 35, 0.95), rgba(103, 181, 141, 0.12));
 }
 
+.overview-trend-cell.is-open .trend-hover-button {
+  border-color: rgba(34, 111, 84, 0.5);
+  background: rgba(34, 111, 84, 0.12);
+}
+
 .trend-hover-button::after {
   content: "";
   width: 6px;
@@ -911,6 +916,13 @@ body.dark .trend-hover-button {
     transform: translateY(0);
     visibility: visible;
   }
+}
+
+.overview-trend-cell.is-open .overview-trend-popover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  visibility: visible;
 }
 
 .overview-trend-popover > strong {
