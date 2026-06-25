@@ -853,44 +853,123 @@ body.dark .app-module-tabs {
 }
 
 .trend-hover-button {
-  min-height: 30px;
-  padding: 0 10px;
-  border: 1px solid var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgba(34, 111, 84, 0.24);
   border-radius: 999px;
   color: var(--accent-strong);
-  background: var(--panel-soft);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(34, 111, 84, 0.08));
   font-weight: 900;
+  box-shadow: 0 5px 16px rgba(25, 68, 50, 0.08);
+}
+
+body.dark .trend-hover-button {
+  background: linear-gradient(180deg, rgba(34, 40, 35, 0.95), rgba(103, 181, 141, 0.12));
+}
+
+.trend-hover-button::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin-top: -2px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  opacity: 0.72;
+  transform: rotate(45deg);
 }
 
 .overview-trend-popover {
   position: absolute;
   right: 8px;
-  bottom: calc(100% - 4px);
+  bottom: calc(100% + 6px);
   z-index: 30;
-  display: none;
-  width: 292px;
-  padding: 10px;
-  border: 1px solid var(--line);
+  display: block;
+  width: 360px;
+  padding: 12px;
+  border: 1px solid rgba(34, 111, 84, 0.18);
   border-radius: var(--radius);
   background: var(--panel);
-  box-shadow: var(--shadow);
+  box-shadow: 0 18px 45px rgba(20, 42, 31, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease,
+    visibility 0.16s ease;
+  visibility: hidden;
 }
 
-.overview-trend-cell:hover .overview-trend-popover,
-.overview-trend-cell:focus-within .overview-trend-popover {
+@media (hover: hover) and (pointer: fine) {
+  .overview-trend-cell:hover .overview-trend-popover {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    visibility: visible;
+  }
+}
+
+.overview-trend-popover > strong {
   display: block;
+  margin-bottom: 8px;
+  color: var(--ink);
+  font-size: 0.84rem;
+  letter-spacing: 0;
 }
 
-.overview-trend-popover strong {
+.overview-trend-card {
+  display: grid;
+  gap: 8px;
+}
+
+.overview-trend-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.overview-trend-stat-grid div {
+  min-width: 0;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-soft);
+}
+
+.overview-trend-stat-grid span {
   display: block;
-  margin-bottom: 6px;
-  font-size: 0.82rem;
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 850;
 }
 
-.overview-trend-svg,
-.overview-trend-empty {
+.overview-trend-stat-grid strong {
+  display: block;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overview-trend-stat-grid strong.positive {
+  color: var(--red);
+}
+
+.overview-trend-stat-grid strong.negative {
+  color: var(--green);
+}
+
+.overview-trend-svg {
   width: 100%;
-  height: 104px;
+  height: 132px;
+  display: block;
 }
 
 .overview-trend-svg line {
@@ -898,7 +977,23 @@ body.dark .app-module-tabs {
   stroke-width: 1;
 }
 
-.overview-trend-svg polyline {
+.overview-trend-area {
+  opacity: 0.13;
+}
+
+.overview-trend-area.positive {
+  fill: var(--red);
+}
+
+.overview-trend-area.negative {
+  fill: var(--green);
+}
+
+.overview-trend-area.neutral {
+  fill: var(--muted);
+}
+
+.overview-trend-line {
   fill: none;
   stroke: var(--muted);
   stroke-width: 3;
@@ -906,11 +1001,31 @@ body.dark .app-module-tabs {
   stroke-linejoin: round;
 }
 
-.overview-trend-svg polyline.positive {
+.overview-trend-line.halo {
+  stroke: var(--panel);
+  stroke-width: 7;
+  opacity: 0.9;
+}
+
+.overview-trend-line.positive {
   stroke: var(--red);
 }
 
-.overview-trend-svg polyline.negative {
+.overview-trend-line.negative {
+  stroke: var(--green);
+}
+
+.overview-trend-dot {
+  fill: var(--panel);
+  stroke: var(--muted);
+  stroke-width: 2;
+}
+
+.overview-trend-dot.positive {
+  stroke: var(--red);
+}
+
+.overview-trend-dot.negative {
   stroke: var(--green);
 }
 
@@ -926,9 +1041,28 @@ body.dark .app-module-tabs {
 
 .overview-trend-empty {
   display: grid;
+  width: 100%;
+  min-height: 132px;
   place-items: center;
+  padding: 18px;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  background: var(--panel-soft);
   color: var(--muted);
   font-weight: 800;
+  text-align: center;
+}
+
+.overview-trend-empty span {
+  color: var(--ink);
+}
+
+.overview-trend-empty em {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-style: normal;
 }
 
 .focus-monitor-surface {
@@ -3046,7 +3180,7 @@ tr:last-child td {
   .overview-trend-popover {
     right: 0;
     left: auto;
-    width: min(320px, calc(100vw - 36px));
+    width: min(360px, calc(100vw - 36px));
   }
 
   .app-module-tabs {

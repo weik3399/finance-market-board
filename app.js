@@ -798,6 +798,11 @@ function bindEvents() {
   window.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !els.sharePanel?.hidden) closeSharePanel();
   });
+
+  document.addEventListener("click", (event) => {
+    const trendButton = event.target.closest(".trend-hover-button");
+    if (trendButton) trendButton.blur();
+  });
 }
 
 function renderLearningTabs() {
@@ -1175,30 +1180,54 @@ function ensureOverviewKlineData(entry, quote) {
 
 function renderOverviewTrendSvg(candles) {
   const valid = candles.filter((item) => Number.isFinite(item.close)).slice(-250);
-  if (valid.length < 2) return `<div class="overview-trend-empty">走势读取中</div>`;
+  if (valid.length < 2) {
+    return `
+      <div class="overview-trend-empty">
+        <span>走势读取中</span>
+        <em>等待日K线返回</em>
+      </div>
+    `;
+  }
 
-  const width = 260;
-  const height = 92;
+  const width = 320;
+  const height = 132;
   const values = valid.map((item) => item.close);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const pad = Math.max((max - min) * 0.12, Math.abs(values[values.length - 1]) * 0.002, 0.01);
   const low = min - pad;
   const high = max + pad;
-  const x = (index) => (index / Math.max(1, valid.length - 1)) * (width - 16) + 8;
-  const y = (value) => height - 18 - ((value - low) / Math.max(0.0001, high - low)) * (height - 30);
+  const plot = { left: 12, right: width - 12, top: 14, bottom: 92 };
+  const x = (index) => plot.left + (index / Math.max(1, valid.length - 1)) * (plot.right - plot.left);
+  const y = (value) => plot.bottom - ((value - low) / Math.max(0.0001, high - low)) * (plot.bottom - plot.top);
   const points = valid.map((item, index) => `${x(index).toFixed(1)},${y(item.close).toFixed(1)}`).join(" ");
   const pct = pctChange(valid[valid.length - 1]?.close, valid[0]?.close);
   const tone = toneClass(pct);
+  const first = valid[0];
+  const last = valid[valid.length - 1];
+  const areaPoints = `${plot.left},${plot.bottom} ${points} ${plot.right},${plot.bottom}`;
 
   return `
-    <svg class="overview-trend-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="近一年走势">
-      <line x1="8" y1="14" x2="${width - 8}" y2="14"></line>
-      <line x1="8" y1="${height - 18}" x2="${width - 8}" y2="${height - 18}"></line>
-      <polyline class="${tone}" points="${points}"></polyline>
-      <text x="8" y="${height - 4}">${formatDateLabel(valid[0].date)}</text>
-      <text class="end" x="${width - 8}" y="${height - 4}">${formatDateLabel(valid[valid.length - 1].date)}</text>
-    </svg>
+    <div class="overview-trend-card">
+      <div class="overview-trend-stat-grid">
+        <div><span>区间</span><strong class="${tone}">${formatDeltaPct(pct)}</strong></div>
+        <div><span>最新</span><strong>${formatPrice(last.close)}</strong></div>
+        <div><span>高点</span><strong>${formatPrice(max)}</strong></div>
+        <div><span>低点</span><strong>${formatPrice(min)}</strong></div>
+      </div>
+      <svg class="overview-trend-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="近一年走势">
+        <line x1="${plot.left}" y1="${plot.top}" x2="${plot.right}" y2="${plot.top}"></line>
+        <line x1="${plot.left}" y1="${(plot.top + plot.bottom) / 2}" x2="${plot.right}" y2="${(plot.top + plot.bottom) / 2}"></line>
+        <line x1="${plot.left}" y1="${plot.bottom}" x2="${plot.right}" y2="${plot.bottom}"></line>
+        <polygon class="overview-trend-area ${tone}" points="${areaPoints}"></polygon>
+        <polyline class="overview-trend-line halo" points="${points}"></polyline>
+        <polyline class="overview-trend-line ${tone}" points="${points}"></polyline>
+        <circle class="overview-trend-dot start" cx="${x(0).toFixed(1)}" cy="${y(first.close).toFixed(1)}" r="3.5"></circle>
+        <circle class="overview-trend-dot end ${tone}" cx="${x(valid.length - 1).toFixed(1)}" cy="${y(last.close).toFixed(1)}" r="4.5"></circle>
+        <text x="${plot.left}" y="${height - 8}">${formatDateLabel(first.date)}</text>
+        <text class="end" x="${plot.right}" y="${height - 8}">${formatDateLabel(last.date)}</text>
+      </svg>
+    </div>
   `;
 }
 
