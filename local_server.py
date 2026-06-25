@@ -11,6 +11,7 @@ HOST = os.environ.get("STOCK_BOARD_HOST", "0.0.0.0")
 PORT = int(os.environ.get("STOCK_BOARD_PORT") or os.environ.get("PORT", "4173"))
 ALLOWED_RANGES = {"1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"}
 ALLOWED_INTERVALS = {"1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo", "3mo"}
+PRIVATE_STATIC_PATHS = {"/DEPLOY.md", "/Dockerfile", "/local_server.py", "/render.yaml"}
 
 
 def unique(items):
@@ -58,10 +59,23 @@ def build_share_info():
 
 
 class StockBoardHandler(SimpleHTTPRequestHandler):
+    def do_HEAD(self):
+        parsed = urlparse(self.path)
+        if parsed.path == "/healthz":
+            self.send_headers_only(200, "text/plain; charset=utf-8", len("ok"))
+            return
+        if parsed.path in PRIVATE_STATIC_PATHS:
+            self.send_headers_only(404, "text/plain; charset=utf-8", 0)
+            return
+        super().do_HEAD()
+
     def do_GET(self):
         parsed = urlparse(self.path)
         if parsed.path == "/healthz":
             self.send_plain_text(200, "ok")
+            return
+        if parsed.path in PRIVATE_STATIC_PATHS:
+            self.send_plain_text(404, "not found")
             return
         if parsed.path == "/api/yahoo-chart":
             self.handle_yahoo_chart(parsed)
@@ -70,6 +84,12 @@ class StockBoardHandler(SimpleHTTPRequestHandler):
             self.handle_share_info()
             return
         super().do_GET()
+
+    def send_headers_only(self, status, content_type, content_length):
+        self.send_response(status)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(content_length))
+        self.end_headers()
 
     def send_plain_text(self, status, message):
         body = message.encode("utf-8")
