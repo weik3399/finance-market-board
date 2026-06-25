@@ -3142,6 +3142,9 @@ function runPendingRefresh() {
 
 function setLoading(isLoading) {
   els.refreshBtn.disabled = isLoading;
+  els.refreshBtn.classList.toggle("is-loading", isLoading);
+  els.refreshBtn.setAttribute("aria-label", isLoading ? "刷新中" : "刷新行情");
+  els.refreshBtn.setAttribute("title", isLoading ? "刷新中" : "刷新行情");
   els.indexCards.classList.toggle("loading", isLoading);
   els.overviewSurface?.classList.toggle("loading", isLoading);
   els.customSurface?.classList.toggle("loading", isLoading);
@@ -3149,7 +3152,8 @@ function setLoading(isLoading) {
   els.aiMetrics.classList.toggle("loading", isLoading);
   els.monitorFocusCards.classList.toggle("loading", isLoading);
   els.stockTrendPanel.classList.toggle("loading", isLoading);
-  els.refreshBtn.querySelector("span").textContent = isLoading ? "刷新中" : "刷新行情";
+  const refreshLabel = els.refreshBtn.querySelector("span");
+  if (refreshLabel) refreshLabel.textContent = isLoading ? "刷新中" : "刷新行情";
 }
 
 async function loadQuotes(codes) {

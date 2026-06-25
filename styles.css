@@ -167,6 +167,16 @@ body.dark .topbar {
   gap: 10px;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .icon-button,
 .primary-button,
 .secondary-button {
@@ -182,6 +192,38 @@ body.dark .topbar {
   height: 40px;
   place-items: center;
   padding: 0;
+}
+
+.toolbar-icon-button {
+  width: 38px;
+  height: 38px;
+  color: var(--accent-strong);
+  background: var(--panel-soft);
+}
+
+.refresh-icon-button {
+  color: #fff;
+  border-color: transparent;
+  background: var(--accent);
+}
+
+.refresh-icon-button:hover {
+  background: var(--accent-strong);
+}
+
+.refresh-icon-button.is-loading svg {
+  animation: toolbar-spin 0.8s linear infinite;
+}
+
+.toolbar-icon-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+@keyframes toolbar-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .primary-button,
@@ -2769,16 +2811,20 @@ tr:last-child td {
 
 @media (max-width: 920px) {
   .topbar {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .app-module-tabs {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .market-clock,
-  .toolbar {
+  .market-clock {
+    grid-column: 1 / -1;
     justify-content: flex-start;
+  }
+
+  .toolbar {
+    justify-content: flex-end;
   }
 
   .dashboard {
@@ -2945,9 +2991,8 @@ tr:last-child td {
   }
 
   .toolbar {
-    display: grid;
-    grid-template-columns: 40px repeat(2, minmax(0, 1fr));
-    width: 100%;
+    display: flex;
+    width: auto;
   }
 
   .share-url-row {
