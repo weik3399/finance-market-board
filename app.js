@@ -607,6 +607,37 @@ const CUSTOM_WATCHLIST_SEED = [
   { type: "stock", market: "cn", code: "sh688507" },
 ];
 
+const CUSTOM_ANALYSIS_NOTES = {
+  sz300903: {
+    level: "重点跟踪",
+    theme: "AI算力PCB / 高阶互连",
+    conclusion: "四只里和AI服务器硬件增量关联最直接，核心看高多层PCB、HDI、光模块PCB和散热封装能否持续转化为订单与毛利。",
+    watch: ["AI服务器与光模块PCB订单", "高阶HDI和mSAP产能进展", "毛利率修复与亏损收窄"],
+    risk: "1年涨幅已经很大，短线估值和情绪波动会很剧烈；如果盈利兑现慢，回撤风险高。",
+  },
+  sh688507: {
+    level: "重点跟踪",
+    theme: "CAE / 物理AI / 工业软件",
+    conclusion: "属于AI软件与工业仿真方向的稀缺标的，弹性来自CAE国产替代、物理AI平台和具身智能/低空经济等复杂工程场景。",
+    watch: ["CAE和物理AI订单落地", "军工与民用客户扩张", "收入规模、回款和费用率"],
+    risk: "题材强但业绩基数小，估值对订单兑现非常敏感；若订单确认慢，股价容易大幅波动。",
+  },
+  sz300174: {
+    level: "观察验证",
+    theme: "新能源碳材料 / 多孔碳",
+    conclusion: "不是典型AI上游卡脖子，更偏新能源材料链。看点在多孔碳、硬碳、硅碳负极材料能否从小收入占比变成实际利润贡献。",
+    watch: ["多孔碳和硬碳收入占比", "硅碳负极客户验证", "新增产能利用率和毛利率"],
+    risk: "材料放量节奏、客户验证和价格波动不确定；如果只停留在概念，估值支撑会变弱。",
+  },
+  sz300782: {
+    level: "观察验证",
+    theme: "射频前端 / 半导体国产替代",
+    conclusion: "半导体国产替代属性较强，但AI服务器链条关联不如PCB、HBM、设备直接。核心仍是手机、IoT、汽车电子和射频模组周期修复。",
+    watch: ["手机与IoT需求恢复", "射频模组和滤波器产品进展", "毛利率与库存周期"],
+    risk: "消费电子周期、竞争加剧和产品结构变化会压制利润；不宜简单当作纯AI上游股。",
+  },
+};
+
 const CUSTOM_MARKET_OPTIONS = {
   stock: [
     { value: "cn", label: "A股" },
@@ -751,6 +782,7 @@ function bindElements() {
   els.customCodeInput = document.getElementById("customCodeInput");
   els.customHint = document.getElementById("customHint");
   els.customMetrics = document.getElementById("customMetrics");
+  els.customAnalysis = document.getElementById("customAnalysis");
   els.customRows = document.getElementById("customRows");
   els.marketCanvas = document.getElementById("marketCanvas");
   els.statPrice = document.getElementById("statPrice");
@@ -1771,6 +1803,8 @@ function renderCustomDashboard() {
     .map(([label, value]) => `<div class="custom-metric-tile"><span>${label}</span><strong>${value}</strong></div>`)
     .join("");
 
+  renderCustomAnalysis(rows);
+
   els.customRows.innerHTML =
     rows
       .map((row) => {
@@ -1816,6 +1850,66 @@ function renderCustomDashboard() {
         `;
       })
       .join("") || `<tr><td colspan="8">还没有自选。可以添加 A股、港股、美股、全球核心股票，或美股ETF/境内场内基金。</td></tr>`;
+}
+
+function renderCustomAnalysis(rows) {
+  if (!els.customAnalysis) return;
+
+  const analyzed = rows
+    .map((row) => ({ row, note: CUSTOM_ANALYSIS_NOTES[row.item.code] }))
+    .filter((item) => item.note);
+
+  if (!analyzed.length) {
+    els.customAnalysis.hidden = true;
+    els.customAnalysis.innerHTML = "";
+    return;
+  }
+
+  els.customAnalysis.hidden = false;
+  els.customAnalysis.innerHTML = `
+    <div class="custom-analysis-head">
+      <div>
+        <p class="eyebrow">分析结论</p>
+        <h4>科翔股份、索辰科技更贴近AI增量；元力股份和卓胜微需要看业务兑现。</h4>
+      </div>
+      <span>按自选行情同步更新周期数据</span>
+    </div>
+    <div class="custom-analysis-grid">
+      ${analyzed
+        .map(({ row, note }) => {
+          const dayTone = toneClass(row.quote?.changePct);
+          return `
+            <article class="custom-analysis-card">
+              <div class="custom-analysis-card-head">
+                <div>
+                  <strong>${row.name}</strong>
+                  <span>${row.codeLabel} · ${note.theme}</span>
+                </div>
+                <em>${note.level}</em>
+              </div>
+              <div class="custom-analysis-mini">
+                <div><span>现价</span><strong>${formatPrice(row.quote?.price)} ${row.quote?.currency ?? ""}</strong></div>
+                <div><span>今日</span><strong class="${dayTone}">${formatPct(row.quote?.changePct)}</strong></div>
+                <div><span>30日</span><strong class="${toneClass(row.p30)}">${formatDeltaPct(row.p30)}</strong></div>
+                <div><span>1年</span><strong class="${toneClass(row.p250)}">${formatDeltaPct(row.p250)}</strong></div>
+              </div>
+              <p>${note.conclusion}</p>
+              <dl>
+                <div>
+                  <dt>重点验证</dt>
+                  <dd>${note.watch.join(" / ")}</dd>
+                </div>
+                <div>
+                  <dt>主要风险</dt>
+                  <dd>${note.risk}</dd>
+                </div>
+              </dl>
+            </article>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
 }
 
 function handleCustomAdd(event) {

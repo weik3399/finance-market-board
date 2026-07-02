@@ -1827,6 +1827,146 @@ body.dark .trend-hover-button {
   white-space: nowrap;
 }
 
+.custom-analysis {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(34, 111, 84, 0.18);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.custom-analysis[hidden] {
+  display: none;
+}
+
+.custom-analysis-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.custom-analysis-head h4 {
+  margin: 2px 0 0;
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.custom-analysis-head > span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.custom-analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.custom-analysis-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(34, 111, 84, 0.06), transparent 120px),
+    var(--panel-soft);
+}
+
+.custom-analysis-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.custom-analysis-card-head strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.custom-analysis-card-head span {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.custom-analysis-card-head em {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border: 1px solid rgba(34, 111, 84, 0.22);
+  border-radius: 999px;
+  color: var(--accent-strong);
+  background: rgba(34, 111, 84, 0.08);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 950;
+}
+
+.custom-analysis-mini {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.custom-analysis-mini div {
+  min-width: 0;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+}
+
+.custom-analysis-mini span,
+.custom-analysis-card dt {
+  display: block;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.custom-analysis-mini strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-analysis-card p,
+.custom-analysis-card dl {
+  margin: 0;
+}
+
+.custom-analysis-card p {
+  line-height: 1.55;
+  font-size: 0.86rem;
+  font-weight: 850;
+}
+
+.custom-analysis-card dl {
+  display: grid;
+  gap: 7px;
+}
+
+.custom-analysis-card dd {
+  margin: 3px 0 0;
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
 .custom-table-wrap {
   overflow: visible;
   background: var(--panel);
@@ -2894,6 +3034,19 @@ tr:last-child td {
     grid-template-columns: 1fr;
   }
 
+  .custom-analysis-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .custom-analysis-head > span {
+    white-space: normal;
+  }
+
+  .custom-analysis-grid {
+    grid-template-columns: 1fr;
+  }
+
   .fund-overview-stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3007,6 +3160,10 @@ tr:last-child td {
   .overview-metrics,
   .fund-metrics,
   .custom-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .custom-analysis-mini {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

@@ -4,9 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>股票基金分析看板</title>
-    <link rel="stylesheet" href="./styles.css?v=20260625-toolbar-icons" />
+    <link rel="stylesheet" href="./styles.css?v=20260702-custom-analysis" />
     <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script defer src="./app.js?v=20260702-custom-seed"></script>
+    <script defer src="./app.js?v=20260702-custom-analysis"></script>
   </head>
   <body>
     <div class="app-shell">
@@ -389,6 +389,7 @@
 
             <p id="customHint" class="custom-hint">股票按所属市场添加；基金支持美股ETF和境内场内基金。自选保存在当前浏览器里。</p>
             <div id="customMetrics" class="custom-metrics"></div>
+            <div id="customAnalysis" class="custom-analysis" aria-live="polite"></div>
 
             <div class="table-wrap custom-table-wrap">
               <table class="custom-table">
