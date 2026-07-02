@@ -1850,8 +1850,9 @@ function renderCustomDashboard() {
               </div>
             </td>
             <td class="col-custom-action">
-              <button class="remove-button" type="button" data-custom-remove="${id}" title="移除前会再次确认" aria-label="移除${row.name}，会再次确认">
+              <button class="remove-button custom-remove-button" type="button" data-custom-remove="${id}" title="移除前会再次确认" aria-label="移除${row.name}，会再次确认">
                 <i data-lucide="trash-2"></i>
+                <span>删除</span>
               </button>
             </td>
           </tr>
