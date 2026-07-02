@@ -595,8 +595,17 @@ const STORAGE_KEYS = {
   aiTrendRange: "stock-board-ai-trend-range",
   activeAppModule: "stock-board-active-module",
   customWatchlist: "stock-board-custom-watchlist",
+  customSeedVersion: "stock-board-custom-seed-version",
   theme: "stock-board-theme",
 };
+
+const CUSTOM_WATCHLIST_SEED_VERSION = "2026-07-02-ai-materials";
+const CUSTOM_WATCHLIST_SEED = [
+  { type: "stock", market: "cn", code: "sz300174" },
+  { type: "stock", market: "cn", code: "sz300903" },
+  { type: "stock", market: "cn", code: "sz300782" },
+  { type: "stock", market: "cn", code: "sh688507" },
+];
 
 const CUSTOM_MARKET_OPTIONS = {
   stock: [
@@ -628,7 +637,7 @@ const state = {
   fundKlineErrors: {},
   fundKlineRetryAt: {},
   watchlists: {},
-  customWatchlist: normalizeCustomWatchlist(readJSON(STORAGE_KEYS.customWatchlist, [])),
+  customWatchlist: readSeededCustomWatchlist(),
   aiMonitors: {},
   aiHistory: {},
   aiKlines: {},
@@ -1934,6 +1943,18 @@ function normalizeCustomWatchlist(items) {
       seen.add(key);
       return true;
     });
+}
+
+function readSeededCustomWatchlist() {
+  const saved = normalizeCustomWatchlist(readJSON(STORAGE_KEYS.customWatchlist, []));
+  if (localStorage.getItem(STORAGE_KEYS.customSeedVersion) === CUSTOM_WATCHLIST_SEED_VERSION) {
+    return saved;
+  }
+
+  const seeded = normalizeCustomWatchlist([...CUSTOM_WATCHLIST_SEED, ...saved]).slice(0, 40);
+  writeJSON(STORAGE_KEYS.customWatchlist, seeded);
+  localStorage.setItem(STORAGE_KEYS.customSeedVersion, CUSTOM_WATCHLIST_SEED_VERSION);
+  return seeded;
 }
 
 function customItemKey(item) {
