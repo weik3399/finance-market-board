@@ -599,7 +599,7 @@ const STORAGE_KEYS = {
   theme: "stock-board-theme",
 };
 
-const CUSTOM_WATCHLIST_SEED_VERSION = "2026-07-02-ai-materials-002297";
+const CUSTOM_WATCHLIST_SEED_VERSION = "2026-07-02-ai-materials-002297-restore";
 const CUSTOM_WATCHLIST_SEED = [
   { type: "stock", market: "cn", code: "sz300174" },
   { type: "stock", market: "cn", code: "sz300903" },
@@ -1850,7 +1850,7 @@ function renderCustomDashboard() {
               </div>
             </td>
             <td class="col-custom-action">
-              <button class="remove-button" type="button" data-custom-remove="${id}" title="移除" aria-label="移除${row.name}">
+              <button class="remove-button" type="button" data-custom-remove="${id}" title="移除前会再次确认" aria-label="移除${row.name}，会再次确认">
                 <i data-lucide="trash-2"></i>
               </button>
             </td>
@@ -1954,11 +1954,32 @@ function handleCustomAction(event) {
   if (!button) return;
 
   const key = button.dataset.customRemove;
-  state.customWatchlist = normalizeCustomWatchlist(state.customWatchlist).filter((item) => customItemKey(item) !== key);
+  const list = normalizeCustomWatchlist(state.customWatchlist);
+  const removedItem = list.find((item) => customItemKey(item) === key);
+  const label = getCustomRemoveLabel(removedItem);
+
+  if (!window.confirm(`确认从自选移除「${label}」吗？\n\n点“确定”才会删除，点“取消”保留。`)) {
+    setCustomHint(`已取消移除：${label}`, false);
+    return;
+  }
+
+  state.customWatchlist = list.filter((item) => customItemKey(item) !== key);
   saveCustomWatchlist();
-  setCustomHint("已从自选移除。", false);
+  setCustomHint(`已从自选移除：${label}`, false);
   renderCustomDashboard();
   refreshIcons();
+}
+
+function getCustomRemoveLabel(item) {
+  if (!item) return "该自选";
+  if (item.type === "fund") {
+    const fund = getCustomFundRecord(item);
+    const quote = getFundQuote(fund);
+    return `${quote?.name ?? fund.name}（${quote?.displayCode ?? getCustomFundDisplayCode(fund)}）`;
+  }
+
+  const quote = state.quotes.get(item.code);
+  return `${quote?.name ?? getCustomStockFallbackName(item)}（${quote?.displayCode ?? getCustomStockFallbackCode(item)}）`;
 }
 
 function getCustomStockItems() {
