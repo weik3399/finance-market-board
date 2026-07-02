@@ -599,12 +599,13 @@ const STORAGE_KEYS = {
   theme: "stock-board-theme",
 };
 
-const CUSTOM_WATCHLIST_SEED_VERSION = "2026-07-02-ai-materials";
+const CUSTOM_WATCHLIST_SEED_VERSION = "2026-07-02-ai-materials-002297";
 const CUSTOM_WATCHLIST_SEED = [
   { type: "stock", market: "cn", code: "sz300174" },
   { type: "stock", market: "cn", code: "sz300903" },
   { type: "stock", market: "cn", code: "sz300782" },
   { type: "stock", market: "cn", code: "sh688507" },
+  { type: "stock", market: "cn", code: "sz002297" },
 ];
 
 const CUSTOM_ANALYSIS_NOTES = {
@@ -635,6 +636,13 @@ const CUSTOM_ANALYSIS_NOTES = {
     conclusion: "半导体国产替代属性较强，但AI服务器链条关联不如PCB、HBM、设备直接。核心仍是手机、IoT、汽车电子和射频模组周期修复。",
     watch: ["手机与IoT需求恢复", "射频模组和滤波器产品进展", "毛利率与库存周期"],
     risk: "消费电子周期、竞争加剧和产品结构变化会压制利润；不宜简单当作纯AI上游股。",
+  },
+  sz002297: {
+    level: "观察验证",
+    theme: "航空航天材料 / 硬质合金",
+    conclusion: "核心看航空机轮刹车系统、航天碳/碳复合材料和硬质合金材料的订单兑现。它更偏商业航天和军工新材料，不是典型AI上游卡脖子标的。",
+    watch: ["航空航天板块收入占比", "硬质合金业务利润率", "商业航天订单是否真实放量"],
+    risk: "近期涨幅较大且题材驱动强，商业航天产品收入占比仍低；如果订单和利润兑现不足，估值回撤压力会比较大。",
   },
 };
 
